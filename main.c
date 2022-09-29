@@ -26,6 +26,7 @@ void main()
   if (arq == NULL)  // Se houve erro na abertura
   {
      printf("Problemas na abertura do arquivo\n");
+     printf('hello');
      return;
   }
   i = 1;
