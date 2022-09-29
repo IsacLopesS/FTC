@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1640026127 source:/home/francisco/Facul/trabalho_final_ftc/trabalho_final_ftc/main.c
+	<stdio.h>
+	<stdlib.h>
+
+1640746630 source:c:\users\franc\documents\git\trabalho_final_ftc\trabalho_final_ftc\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
