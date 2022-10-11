@@ -1,0 +1,25 @@
+5
+A
+B
+C
+D
+E
+2
+0
+1
+10
+A 1 B
+A 0 D
+B 1 A
+B 0 C
+C 1 B
+C 0 E
+D 1 D
+D 0 E
+E 0 E
+E 1 E
+A
+2
+D
+E
+

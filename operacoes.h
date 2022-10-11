@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "pilha.c"
 #define tamNome 20
 typedef struct
 {
     char nomeEstado[tamNome];
     int inicial; //1 para sim, 0 para nao
     int final;   //1 para sim, 0 para nao
+    int id;
+    int chegou; // 1 para sim, 0 para nao
 } Estado;
 typedef struct
 {
@@ -161,6 +164,12 @@ void lerafd(AFD *afd, char *nome)
         for (int a = 0; a < afd->qtdEstados; a++)
             if (strcmp(afd->estados[a].nomeEstado, aux) == 0)
                 afd->transicoes[i].destino = &afd->estados[a];
+    }
+
+    // atribuir id para os estados
+    for (int i = 1; i <= afd->qtdEstados; i++)
+    {
+        afd->estados[i].id = i;
     }
 
     //Lê o estado inicial e armaneza em estruturas
@@ -333,6 +342,156 @@ void multiplicaAfd(AFD afd, AFD afd2)
 
 printf('\n\nisac aqui ->  %d',afd.qtdTransicoes);
 exit(10);
+
+}
+
+void minimizacao(AFD *afd)
+{
+    Estado proximoEstadoZero, proximoEstadoUm;
+    Pilha *faltaChecar = create_stack();
+    AFD teste;
+    
+    //coloca no estado inicial
+    int id_atual;
+    for (int i = 0; i < afd->qtdEstados; i++) {
+        if (afd->estados[i].inicial == 1) {
+            afd->estados[i].chegou = 1;
+            push(faltaChecar, afd->estados[i].id);
+        }
+    }
+
+    //varifica os estados inalcançáveis
+    do {        
+        int indexTrasacao = 0, contador = 0;
+        id_atual = pop(faltaChecar);
+
+        while(contador < afd->tamAlfabeto) {
+            if (afd->transicoes[indexTrasacao].origem->nomeEstado == afd->estados[id_atual].nomeEstado) {
+                if (afd->transicoes[indexTrasacao].destino->chegou == 0) {
+                    afd->transicoes[indexTrasacao].destino->chegou = 1;
+                    push(faltaChecar, afd->transicoes[indexTrasacao].destino->id); 
+                }
+                contador++;
+            }
+            indexTrasacao++;
+        }
+    } while (empty(faltaChecar) == 0);
+    
+    // retirar estados inalcançáveis
+    for (int index = 0; index < afd->qtdEstados; index++) {
+        if(afd->estados[index].chegou == 0 ) {
+            
+            for (int indexRetirarTransacao = 0; indexRetirarTransacao <= afd->qtdTransicoes; indexRetirarTransacao++) {
+                if (afd->transicoes[indexRetirarTransacao].origem->id == afd->estados[index].id) {
+
+                    for (int indexRetirarTransacao2 = indexRetirarTransacao; indexRetirarTransacao < afd->qtdTransicoes - 1; indexRetirarTransacao++) {
+                        afd->transicoes[indexRetirarTransacao2] = afd->transicoes[indexRetirarTransacao2 + 1];
+                    }
+
+                    afd->qtdTransicoes = afd->qtdTransicoes - 1;
+                    indexRetirarTransacao = indexRetirarTransacao - 1;
+                }
+            }
+
+            for (int indexRetirar = index; indexRetirar < afd->qtdEstados; indexRetirar++) {
+                afd->estados[indexRetirar] = afd->estados[indexRetirar + 1];
+            }
+            afd->qtdEstados = afd->qtdEstados - 1;
+        }
+    }
+
+    //varifica estados equivalentes
+    
+    for (int i = 0; i < afd->qtdEstados; i++) 
+    {   
+        if (afd->estados[i].chegou == 1) 
+        {
+            for (int j = 0; j <= afd->qtdEstados; j++) 
+            {
+                int iguais = 0;
+                int trasacaoI = 0;
+                int transacaoJ = 0;
+                Pilha *trasacaoEliminar = create_stack();
+
+                if (i != j) {
+                    if (afd->estados[j].chegou == 1) 
+                    {
+                        int contadorI = 0;
+                        while (contadorI < afd->tamAlfabeto) 
+                        {
+                            if (afd->estados[i].id == afd->transicoes[trasacaoI].origem->id ) {
+                                int contadorJ = 0;
+                                transacaoJ = 0;
+                                
+                                while (contadorJ < afd->tamAlfabeto)
+                                {
+                                    if (afd->estados[j].id == afd->transicoes[transacaoJ].origem->id) {
+
+                                        if (afd->transicoes[transacaoJ].consumo->elementoAlfabeto == afd->transicoes[trasacaoI].consumo->elementoAlfabeto) {
+
+                                            if (afd->transicoes[transacaoJ].destino->final == afd->transicoes[trasacaoI].destino->final) {
+
+                                                if (afd->transicoes[transacaoJ].origem->final == afd->transicoes[trasacaoI].origem->final) {
+                                                    iguais++;
+                                                    push(trasacaoEliminar, transacaoJ);
+                                                }
+                                            }
+                                        }
+                                        contadorJ++;
+                                    }
+                                    transacaoJ++;
+                                }
+                                
+                                contadorI++;
+                            }
+                            
+                            trasacaoI++;
+                        }
+                    }
+                }
+
+                if (iguais == afd->tamAlfabeto) {               
+                    while (empty(trasacaoEliminar) == 0)
+                    {
+                        int idTrasacao = pop(trasacaoEliminar);
+
+                        for (int indexRetirarTransacao = idTrasacao; indexRetirarTransacao < afd->qtdTransicoes; indexRetirarTransacao++) {
+                            afd->transicoes[indexRetirarTransacao] = afd->transicoes[indexRetirarTransacao + 1];
+                        }
+
+                        afd->qtdTransicoes = afd->qtdTransicoes - 1;
+                    }
+
+                    for (int indexRetirarTransacao = 0; indexRetirarTransacao < afd->qtdTransicoes; indexRetirarTransacao++) {
+                        if (afd->transicoes[indexRetirarTransacao].destino->id == afd->estados[j].id) {
+                            afd->transicoes[indexRetirarTransacao].destino = &afd->estados[i];
+                        }
+                    }
+
+
+                    if (afd->estados[j].final == 1) {
+                        afd->qtdFinais = afd->qtdFinais - 1;
+                    }
+
+                    for (int index = j; index <= afd->qtdEstados; index++) {
+                        if (index < afd->qtdEstados) {
+                            afd->estados[index] = afd->estados[index+1];
+                            for (int indexRetirarTransacao = 0; indexRetirarTransacao < afd->qtdTransicoes; indexRetirarTransacao++) {
+                                if (afd->transicoes[indexRetirarTransacao].origem->id == afd->estados[index + 1].id) {
+                                    afd->transicoes[indexRetirarTransacao].origem = &afd->estados[index];
+                                }
+                                if (afd->transicoes[indexRetirarTransacao].destino->id == afd->estados[index + 1].id) {
+                                    afd->transicoes[indexRetirarTransacao].destino = &afd->estados[index];
+                                }
+                            }
+                        } 
+                    }
+                    
+                    afd->qtdEstados = afd->qtdEstados - 1;
+                }
+            }
+        }
+    }
 
 }
 
