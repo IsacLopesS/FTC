@@ -239,7 +239,7 @@ void escreveDot(char nome[], AFD afd)
             fprintf(arq, "\n\tqi -> %s;", afd.estados[i].nomeEstado);
 
     for (int i = 0; i < afd.qtdTransicoes; i++)
-        fprintf(arq, "\n\t%s -> %s [label = %c ];", afd.transicoes[i].origem, afd.transicoes[i].destino, afd.transicoes[i].consumo->elementoAlfabeto);
+        fprintf(arq, "\n\t%s -> %s [label = %c ];", afd.transicoes[i].origem->nomeEstado, afd.transicoes[i].destino->nomeEstado, afd.transicoes[i].consumo->elementoAlfabeto);
     fprintf(arq, "\n\t}");
     free(str);
     fclose(arq);
@@ -261,7 +261,7 @@ void escreveTxt(AFD afd, char *nome)
         fprintf(arq, "%c\n", afd.alfabeto[i].elementoAlfabeto);
     fprintf(arq, "%d\n", afd.qtdTransicoes);
     for (int i = 0; i < afd.qtdTransicoes; i++)
-        fprintf(arq, "%s %c %s\n", afd.transicoes[i].origem, afd.transicoes[i].consumo->elementoAlfabeto, afd.transicoes[i].destino);
+        fprintf(arq, "%s %c %s\n", afd.transicoes[i].origem->nomeEstado, afd.transicoes[i].consumo->elementoAlfabeto, afd.transicoes[i].destino->nomeEstado);
     for (int i = 0; i < afd.qtdEstados; i++)
         if (afd.estados[i].inicial == 1)
             fprintf(arq, "%s\n", afd.estados[i].nomeEstado);
@@ -340,8 +340,8 @@ void reconheceEscreveArquivo(char *palavras, char *saida, AFD afd)
 void multiplicaAfd(AFD afd, AFD afd2)
 {
 
-printf('\n\nisac aqui ->  %d',afd.qtdTransicoes);
-exit(10);
+// printf('\n\nisac aqui ->  %d',afd.qtdTransicoes);
+// exit(10);
 
 }
 
@@ -349,7 +349,6 @@ void minimizacao(AFD *afd)
 {
     Estado proximoEstadoZero, proximoEstadoUm;
     Pilha *faltaChecar = create_stack();
-    AFD teste;
     
     //coloca no estado inicial
     int id_atual;
@@ -368,6 +367,7 @@ void minimizacao(AFD *afd)
         while(contador < afd->tamAlfabeto) {
             if (afd->transicoes[indexTrasacao].origem->nomeEstado == afd->estados[id_atual].nomeEstado) {
                 if (afd->transicoes[indexTrasacao].destino->chegou == 0) {
+                    
                     afd->transicoes[indexTrasacao].destino->chegou = 1;
                     push(faltaChecar, afd->transicoes[indexTrasacao].destino->id); 
                 }
@@ -376,15 +376,17 @@ void minimizacao(AFD *afd)
             indexTrasacao++;
         }
     } while (empty(faltaChecar) == 0);
+
+            
     
     // retirar estados inalcançáveis
     for (int index = 0; index < afd->qtdEstados; index++) {
         if(afd->estados[index].chegou == 0 ) {
-            
+            printf("%s", afd->estados[index].nomeEstado);
             for (int indexRetirarTransacao = 0; indexRetirarTransacao <= afd->qtdTransicoes; indexRetirarTransacao++) {
                 if (afd->transicoes[indexRetirarTransacao].origem->id == afd->estados[index].id) {
 
-                    for (int indexRetirarTransacao2 = indexRetirarTransacao; indexRetirarTransacao < afd->qtdTransicoes - 1; indexRetirarTransacao++) {
+                    for (int indexRetirarTransacao2 = indexRetirarTransacao; indexRetirarTransacao2 < afd->qtdTransicoes - 1; indexRetirarTransacao2++) {
                         afd->transicoes[indexRetirarTransacao2] = afd->transicoes[indexRetirarTransacao2 + 1];
                     }
 
@@ -392,10 +394,22 @@ void minimizacao(AFD *afd)
                     indexRetirarTransacao = indexRetirarTransacao - 1;
                 }
             }
-
-            for (int indexRetirar = index; indexRetirar < afd->qtdEstados; indexRetirar++) {
-                afd->estados[indexRetirar] = afd->estados[indexRetirar + 1];
+            
+            
+            for (int indexRetirarEstado = index; indexRetirarEstado <= afd->qtdEstados; indexRetirarEstado++) {
+                if (indexRetirarEstado < afd->qtdEstados) {
+                    afd->estados[indexRetirarEstado] = afd->estados[indexRetirarEstado+1];
+                    for (int indexRetirarTransacao = 0; indexRetirarTransacao < afd->qtdTransicoes; indexRetirarTransacao++) {
+                        if (afd->transicoes[indexRetirarTransacao].origem->id == afd->estados[indexRetirarEstado + 1].id) {
+                            afd->transicoes[indexRetirarTransacao].origem = &afd->estados[indexRetirarEstado];
+                        }
+                        if (afd->transicoes[indexRetirarTransacao].destino->id == afd->estados[indexRetirarEstado + 1].id) {
+                            afd->transicoes[indexRetirarTransacao].destino = &afd->estados[indexRetirarEstado];
+                        }
+                    }
+                } 
             }
+            
             afd->qtdEstados = afd->qtdEstados - 1;
         }
     }

@@ -1,15 +1,14 @@
-7
+6
 A
 B
 C
 D
 E
 F
-G
 2
 0
 1
-14
+12
 A 0 B
 A 1 C
 B 0 B
@@ -22,8 +21,6 @@ E 0 F
 E 1 D
 F 0 B
 F 1 D
-G 0 E
-G 1 F
 A
 2
 B
