@@ -292,8 +292,13 @@ char reconhecePalavra(AFD afd, char *input, int tam, Estado *estado_atual)
 
 void complemento(AFD *afd)
 {
+    int cont = 0;
+    
     for (int i = 0; i < afd->qtdEstados; i++)
         (afd->estados[i].final == 1) ? (afd->estados[i].final = 0) : (afd->estados[i].final = 1);
+
+    cont = afd->qtdEstados - afd->qtdFinais;
+    afd->qtdFinais = cont;
 }
 
 void reconheceEscreveArquivo(char *palavras, char *saida, AFD afd)
