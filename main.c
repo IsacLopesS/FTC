@@ -35,6 +35,13 @@ void Decide(int argc, char *argv[], int n, AFD *afd, AFD *afd2)
         {
 
         }
+        else if ((strcmp(argv[n], "--minimizacao") == 0) && (strcmp(argv[n + 2], "--output") == 0))
+        {
+            lerafd(afd, argv[n + 1]);
+            minimizacao(afd);
+            escreveTxt(*afd, argv[n + 3]);
+            return;
+        }
 
     }
     printf("\n\nATENÇÃO, O USO DEVE OCORRER DA SEGUINTES FORMAS:");
@@ -42,7 +49,7 @@ void Decide(int argc, char *argv[], int n, AFD *afd, AFD *afd2)
     printf("\n./afdtool --reconhecer {nome_arquivo_afd}.txt {nome_arquivo_palavras}.txt --output {nome_arquivo_saida}.txt\n");  
     printf("\n\n./afdtool --intersecao {nome_arquivo_afd}.txt {nome_arquivo_afd}.txt --output {nome_arquivo_saida}.txt\n ");
     printf("\n\n./afdtool --uniao {nome_arquivo_afd}.txt {nome_arquivo_afd}.txt --output {nome_arquivo_saida}.txt\n ");
-    
+    printf("\n\n./afdtool --minimizacao {nome_arquivo_afd}.txt --output {nome_arquivo_saida}.txt\n ");
 }
 int main(int argc, char *argv[])
 {
